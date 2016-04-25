@@ -410,9 +410,9 @@ static void lcd_sdcard_resume() {
   card.startFileprint();
 }
 
-float move_menu_scale;
+float move_menu_scale = 1.0f;
 static void lcd_move_menu_axis();
-
+static void lcd_move_scale_menu();
 
 
 
@@ -1002,6 +1002,7 @@ void lcd_move_menu_axis()
 {
   START_MENU();
   MENU_ITEM(back, MSG_SETTINGS, lcd_settings_menu);
+  MENU_ITEM(submenu, PSTR("Scale"), lcd_move_scale_menu);
   MENU_ITEM(submenu, MSG_MOVE_X, lcd_move_x);
   MENU_ITEM(submenu, MSG_MOVE_Y, lcd_move_y);
   if (move_menu_scale < 10.0)
@@ -1012,10 +1013,33 @@ void lcd_move_menu_axis()
   END_MENU();
 }
 
+static void lcd_move_menu_01mm()
+{
+  move_menu_scale = 0.1;
+  lcd_goto_menu(lcd_move_menu_axis);
+}
+
 static void lcd_move_menu_1mm()
 {
   move_menu_scale = 1.0;
-  lcd_move_menu_axis();
+  lcd_goto_menu(lcd_move_menu_axis);
+}
+
+static void lcd_move_menu_10mm()
+{
+  move_menu_scale = 10.0;
+  lcd_goto_menu(lcd_move_menu_axis);
+}
+
+void lcd_move_scale_menu()
+{
+  START_MENU();
+
+  MENU_ITEM(function, MSG_MOVE_01MM, lcd_move_menu_01mm);
+  MENU_ITEM(function, MSG_MOVE_1MM, lcd_move_menu_1mm);
+  MENU_ITEM(function, MSG_MOVE_10MM, lcd_move_menu_10mm);
+  
+  END_MENU();
 }
 
 
@@ -1083,7 +1107,7 @@ static void lcd_settings_menu()
   MENU_ITEM(submenu, MSG_TEMPERATURE, lcd_control_temperature_menu);
 
 
-  MENU_ITEM(submenu, MSG_MOVE_AXIS, lcd_move_menu_1mm);
+  MENU_ITEM(submenu, MSG_MOVE_AXIS, lcd_move_menu_axis);
 
   MENU_ITEM(gcode, MSG_HOMEYZ, PSTR("G28 Z"));
 
@@ -1417,14 +1441,6 @@ static void lcd_tune_menu()
   END_MENU();
 }
 
-
-
-
-static void lcd_move_menu_01mm()
-{
-  move_menu_scale = 0.1;
-  lcd_move_menu_axis();
-}
 
 static void lcd_control_temperature_menu()
 {
@@ -2059,6 +2075,20 @@ char *ftostr12ns(const float &x)
   conv[2] = (xx / 10) % 10 + '0';
   conv[3] = (xx) % 10 + '0';
   conv[4] = 0;
+  return conv;
+}
+
+//Float to string with 1.2 format
+char *ftostr11ns(const float &x)
+{
+  long xx = x * 100;
+
+  xx = abs(xx);
+  conv[0] = (xx / 100) % 10 + '0';
+  conv[1] = '.';
+  conv[2] = (xx / 10) % 10 + '0';
+  conv[3] = 0;
+
   return conv;
 }
 
